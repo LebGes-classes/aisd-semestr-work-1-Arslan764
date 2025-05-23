@@ -1,5 +1,8 @@
 ﻿#include "aaTree.h"
+#include <iostream>
 
+
+//конструктор
 template <typename T>
 aaTree<T>::aaTree()
 {
@@ -7,21 +10,22 @@ aaTree<T>::aaTree()
 
 }
 
+
+//деструктор
 template <typename T>
 aaTree<T>::~aaTree()
 {
-	clear();//TODO доделать
-	// нужно удалить каждый Node из за отсутвия сборщика?
+	clear();//вызываем метод, очищающий дерево
 }
 
 template <typename T>
-void aaTree<T>::insert(T& value)// пользовательский метод, вызыввает внутренниий, рекурсивный
+void aaTree<T>::insert(const T& value)// пользовательский метод добавления, вызыввает внутренниий, рекурсивный
 {
 	root = insert(root, value);
 }
 
 template <typename T>
-typename aaTree<T>::Node* aaTree<T>::insert(Node* node, T& value)
+typename aaTree<T>::Node* aaTree<T>::insert(Node* node, const T& value)
 {
 	if (node == nullptr)// если узел null, то создаем новый
 	{
@@ -38,7 +42,7 @@ typename aaTree<T>::Node* aaTree<T>::insert(Node* node, T& value)
 	else
 	{
 		//дубликаты не допускаются?
-		return node
+		return node;
 	}
 	// балансируем элементы
 	node = skew(node);
@@ -103,39 +107,144 @@ typename aaTree<T>::Node* aaTree<T>::split(Node* node)// метод баланс
 }
 
 template <typename T>
-void aaTree<T>::remove(T& value)
+void aaTree<T>::remove(const T& value)//пользовательский метод удаления
 {
 	root = remove(root, value);
 }
 
 template <typename T>
-typename aaTree<T>::Node* aaTree<T>::remove(Node* node, T& value)
+typename aaTree<T>::Node* aaTree<T>::remove(Node* node, const T& value)
 {
+	if (node == nullptr)
+	{
+		return nullptr;//дошли до листа, значения нет, удалять нечего
+	}
+	if (value < node->value)
+	{
+		node->left = remove(node->left, value);// удаляем в левом поддереве
+	}
+	else if (value > node->value)
+	{
+		node->right = remove(node->right, value);// удаляем в правом поддереве
+	}
+	else
+	{
+		Node* temp = nullptr;
+		if (node->left == nullptr && node->right == nullptr)// у узла нет потомков - спокойно удаляем
+		{
+			delete node;
+			return nullptr;
+		}
+		else if (node->right == nullptr)// только левый потомок не null
+		{
+			temp = node->left;
+			delete node;
+			return temp;//левый потомок занимает место удаленного узла
+		}
+		else if (node->left == nullptr)// только правый потомок не null
+		{
+			temp = node->right;
+			delete node;
+			return temp;//правй потомок занимает место удаленного узла
+		}
+		else //оба потомка не null -> заменяем на минимальный узел правого поддерева
+		{
+			temp = node->right;
+			while (temp->left != nullptr)//находим мин узел правого поддерева
+			{
+				temp = temp->left;
+			}
+			node->value = temp->value;//присваеиваем значение мин узла удаляемому
+			node->right = remove(node->right, temp->value);//удаляем узел, которым заменили удаляемый
+			//TODO доделать
+		}
+	}
 
+	if (node == nullptr) {
+		return nullptr;
+	}
+	// балансируем дерево после удаления элемента
+	node = skew(node);
+	node->right = skew(node->right);
+	if (node->right != nullptr)
+	{
+		node->right->right = skew(node->right->right);
+	}
+	node = split(node);
+	node->right = split(node->right);
+	
+	return node;
+	
 }
 
 template <typename T>
-bool aaTree<T>::contains(T& value)
+bool aaTree<T>::contains(const T& value)// пользовательский метод, вызыввает внутренниий, рекурсивный
 {
 	bool isFound = contains(root, value);
 	return isFound;
 }
 
 template <typename T>
-bool aaTree<T>::contains(Node* node, T& value)
+bool aaTree<T>::contains(Node* node, const T& value)
 {
 	if (node == nullptr)
 	{
 		return false;
 	}
-	if (node->value == value)//не уверен как это в плюсах, нужен ли аналог equals?
+	if (node->value == value)// нашли искомое значение
 	{
 		return true;
 	}
-	else if (value < node->value) {
+	else if (value < node->value) {// ищем в леовм поддереве
 		return contains(node->left, value);
 	}
-	else if (value > node->value) {
+	else if (value > node->value) {// ищем в правом поддереве
 		return contains(node->right, value);
 	}
+}
+
+template <typename T>
+void aaTree<T>::inOrder()// пользовательский метод, вызыввает внутренниий, рекурсивный
+{
+	inOrder(root);
+}
+
+template <typename T>
+void aaTree<T>::inOrder(Node* node)// метод для обхода в дереве в порядке левое поддерево - корень - правое поддерево
+{
+	if (node == nullptr)// null - лист -Ю выходим из рекурсии
+	{
+		return;
+	}
+
+	inOrder(node->left);// идем в левое поддерево, пока не дойдем до базового случая
+
+	std::cout << node->value << " ";// выводим элемент
+
+	inOrder(node->right);// идем вправое поддерево
+}
+
+template <typename T>
+void aaTree<T>::clear()
+{
+	//Вызов рекурсивной функции, удаляющей поддеревья
+	deleteSubtree(root);
+}
+
+template <typename T>
+void aaTree<T>::deleteSubtree(Node* node)
+{
+	if (node != nullptr)
+	{
+		//Удаление поддерева слева
+		deleteSubtree(node->left);
+		//Удаление поддерева справа
+		deleteSubtree(node->right);
+
+		//Удаление узла
+		delete node;
+
+		node = nullptr;
+	}
+	return;
 }

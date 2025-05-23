@@ -11,8 +11,8 @@ class aaTree
 		Node* left;
 		Node* right;
 
-		Node(T& value)
-		{//можно инициализированным списком?
+		Node(const T& value)
+		{
 			this->value = value;
 			level = 1;
 			left = nullptr;
@@ -25,22 +25,22 @@ class aaTree
 private:
 	
 
-	Node* insert(Node* node, T& value);
+	Node* insert(Node* node, const T& value);
 	Node* skew(Node* node);
 	Node* split(Node* node);
-	Node* remove(Node* node, T& value);
+	Node* remove(Node* node, const T& value);
 	void inOrder(Node* node);
-	bool contains(Node* node, T& value);
-	void clear(Node* node);
+	bool contains(Node* node, const T& value);
+	void deleteSubtree(Node* node);
 
 public:
 	aaTree();
 	~aaTree();
 
-	void insert(T& value);
+	void insert(const T& value);
 	void inOrder();
-	bool contains(T& value);
-	void remove(T& value);
+	bool contains(const T& value);
+	void remove(const T& value);
 	void clear();
 };
 
